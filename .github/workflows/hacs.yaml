@@ -15,3 +15,6 @@ jobs:
         uses: "hacs/action@main"
         with:
           category: "integration"
+          # Lizenz: Original-Repo (hzjchina/hass-welock) hat keine Lizenz - Antwort des Autors abwarten.
+          # Topics: werden im GitHub-"About"-Bereich gepflegt.
+          ignore: "license topics"
