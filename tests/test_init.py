@@ -278,3 +278,31 @@ async def test_own_unlock_confirmation_not_shown_twice(
     init_integration.runtime_data._handle_push(wifibox)
     await hass.async_block_till_done()
     assert hass.states.get(lock_id).state == "unlocked"
+
+
+async def test_token_refresh_does_not_reload(
+    hass: HomeAssistant, init_integration
+) -> None:
+    """Storing a refreshed token must not reload the entry (hourly blip)."""
+    coordinator = init_integration.runtime_data
+    lock_id = _eid(hass, "lock", "welock.LOCK1_LockOperation")
+    states: list[str] = []
+    hass.bus.async_listen(
+        "state_changed",
+        lambda e: (
+            states.append(e.data["new_state"].state)
+            if e.data["entity_id"] == lock_id and e.data["new_state"]
+            else None
+        ),
+    )
+    hass.config_entries.async_update_entry(
+        init_integration,
+        data={
+            **init_integration.data,
+            "token": {**init_integration.data["token"], "access_token": "new"},
+        },
+    )
+    await hass.async_block_till_done()
+    assert init_integration.runtime_data is coordinator
+    assert "unavailable" not in states
+    assert hass.states.get(lock_id).state == "locked"

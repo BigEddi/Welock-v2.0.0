@@ -102,12 +102,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: WeLockConfigEntry) -> bo
     coordinator.push.start(
         lambda coro, name: entry.async_create_background_task(hass, coro, name)
     )
-    entry.async_on_unload(entry.add_update_listener(_async_options_updated))
+    options_at_setup = dict(entry.options)
+
+    async def _async_entry_updated(
+        hass: HomeAssistant, entry: WeLockConfigEntry
+    ) -> None:
+        # The OAuth session stores every refreshed token in the entry (about
+        # once per hour). Only reload when the options really changed.
+        if dict(entry.options) != options_at_setup:
+            await hass.config_entries.async_reload(entry.entry_id)
+
+    entry.async_on_unload(entry.add_update_listener(_async_entry_updated))
     return True
-
-
-async def _async_options_updated(hass: HomeAssistant, entry: WeLockConfigEntry) -> None:
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: WeLockConfigEntry) -> bool:
