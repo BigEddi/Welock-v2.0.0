@@ -78,13 +78,16 @@ async def test_push_unlock_event(hass: HomeAssistant, init_integration) -> None:
     await hass.async_block_till_done()
 
     record = hass.states.get(_eid(hass, "sensor", "welock.LOCK1_Record"))
-    assert record.state == "card"
+    # English test instance; time 1794210000000 ms = 2026-11-09 07:40:00 UTC
+    assert record.state.startswith("Card · Thomas · 2026-11-0")
+    assert record.attributes["method"] == "card"
     assert record.attributes["user"] == "Thomas"
     assert record.attributes["user_id"] == "10"
 
     event = hass.states.get(_eid(hass, "event", "welock.LOCK1_Event"))
-    assert event.attributes["event_type"] == "unlock"
-    assert event.attributes["method"] == "card"
+    assert event.attributes["event_type"] == "card"
+    assert event.attributes["event"] == "unlock"
+    assert event.attributes["user"] == "Thomas"
 
     ts = hass.states.get(_eid(hass, "sensor", "welock.LOCK1_LastActivity"))
     assert ts.state.startswith("2026-11-")
@@ -272,7 +275,8 @@ async def test_own_unlock_confirmation_not_shown_twice(
     assert hass.states.get(lock_id).state == "locked"
     # still recorded as activity
     record = hass.states.get(_eid(hass, "sensor", "welock.LOCK1_Record"))
-    assert record.state == "wifibox"
+    assert record.state == "WIFIBOX / Home Assistant"
+    assert record.attributes["method"] == "wifibox"
 
     # a second WIFIBOX unlock (e.g. from the WeLock app) is shown again
     init_integration.runtime_data._handle_push(wifibox)
@@ -306,3 +310,26 @@ async def test_token_refresh_does_not_reload(
     assert init_integration.runtime_data is coordinator
     assert "unavailable" not in states
     assert hass.states.get(lock_id).state == "locked"
+
+
+def test_describe_activity_german() -> None:
+    """German text, user id without name, WIFIBOX ids hidden."""
+    from datetime import UTC, datetime
+
+    from homeassistant.util import dt as dt_util
+
+    from custom_components.welock.api import WeLockActivity
+    from custom_components.welock.sensor import describe_activity
+
+    dt_util.set_default_time_zone(dt_util.get_time_zone("Europe/Berlin"))
+    t = datetime(2026, 11, 20, 7, 18, 33, tzinfo=UTC)
+    act = WeLockActivity("unlock", "card", 3, "7", None, t, 1)
+    assert describe_activity(act, "de") == "Karte · Benutzer 7 · 20.11.2026 08:18:33"
+    temp = WeLockActivity("unlock", "temporary_passcode", 11, "3", None, t, 1)
+    assert describe_activity(temp, "en").startswith("Temporary passcode · User 3 ·")
+    box = WeLockActivity("unlock", "wifibox", 17, "WL_ABC", None, t, 1)
+    assert (
+        describe_activity(box, "de") == "WIFIBOX / Home Assistant · 20.11.2026 08:18:33"
+    )
+    relay = WeLockActivity("relay_action", None, None, None, None, None, None)
+    assert describe_activity(relay, "de") == "Relais"

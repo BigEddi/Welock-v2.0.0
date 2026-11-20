@@ -2,7 +2,7 @@
 
 [![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz/docs/faq/custom_repositories)
 [![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2025.3%2B-03A9F4.svg)](https://www.home-assistant.io/)
-![Version](https://img.shields.io/badge/Version-2.0.0-green.svg)
+![Version](https://img.shields.io/badge/Version-2.0.3-green.svg)
 
 Diese Integration bindet **WeLock-Smartlocks**, die **WIFIBOX3** und **WeLock-Türkontakte** in Home Assistant ein. Du kannst damit die Tür aus Home Assistant entriegeln, den Batteriestand überwachen und siehst in Echtzeit, wer die Tür wann und wie geöffnet hat.
 
@@ -86,17 +86,17 @@ Schloss und WIFIBOX müssen in der **WeLock-App** bereits gekoppelt sein und dor
 |---|---|---|---|
 | Schloss | *(Gerätename)* | `lock` | Entriegeln. Das Schloss verriegelt automatisch und wird danach wieder als „verriegelt“ angezeigt. |
 | Schloss | Batterie | `sensor` | Batteriestand in % |
-| Schloss, WIFIBOX3 | Letzte Öffnung | `sensor` | Methode (Karte, Fingerabdruck, PIN-Code, App, …). Attribute: `user`, `user_id`, `time`, `method_id` |
+| Schloss, WIFIBOX3 | Letzte Öffnung | `sensor` | Wie, wer und wann, z. B. `Karte · Benutzer 7 · 20.11.2026 08:18:33`. Attribute: `method`, `user`, `user_id`, `time` |
 | Schloss, WIFIBOX3 | Letzte Aktivität | `sensor` | Zeitpunkt der letzten Öffnung |
-| Schloss, WIFIBOX3 | Aktivität | `event` | Wird bei jeder Öffnung ausgelöst (`unlock` oder `relay_action`) |
+| Schloss, WIFIBOX3 | Aktivität | `event` | Wird bei jeder Öffnung ausgelöst. Ereignistyp = Öffnungsmethode (`card`, `fingerprint`, …), Attribute `user`, `time` |
 | WIFIBOX3 | Fernsteuerung auslösen | `button` | Löst die Fernsteuerung bzw. das Relais der WIFIBOX3 aus |
 | Türkontakt | Tür | `binary_sensor` | Offen / geschlossen |
 | Türkontakt | Batterie | `sensor` | Batteriestand in % |
 
-**Mögliche Werte von „Letzte Öffnung“:**
+**Öffnungsmethoden** (Attribut `method` und Ereignistyp der Entität „Aktivität“):
 `fingerprint` (Fingerabdruck), `passcode` (PIN-Code), `temporary_passcode` (temporärer Code), `card` (Karte), `nfc`, `face` (Gesichtserkennung), `app`, `bt_remote` (Bluetooth-Fernbedienung), `remote_433` (433-MHz-Fernbedienung), `wifibox` (WIFIBOX / Home Assistant), `vacation` (Urlaubsmodus), `local` (manuell von innen), `relay` (Relais), `other` (sonstiges).
 
-In der Oberfläche werden die Werte übersetzt angezeigt. In Automationen verwendest du die englischen Werte aus der Liste.
+In der Oberfläche und im Logbuch werden die Werte übersetzt angezeigt. In Automationen verwendest du die englischen Werte aus der Liste.
 
 ## Optionen
 
@@ -120,8 +120,7 @@ actions:
   - action: notify.notify
     data:
       message: >
-        Tür geöffnet per {{ trigger.to_state.attributes.method }}
-        von {{ trigger.to_state.attributes.user or 'unbekannt' }}
+        Tür geöffnet: {{ states('sensor.wohnungstur_letzte_offnung') }}
 ```
 
 **Licht im Flur einschalten, wenn per Karte geöffnet wird**
@@ -134,7 +133,7 @@ triggers:
     not_from: unavailable
 conditions:
   - condition: template
-    value_template: "{{ trigger.to_state.attributes.method == 'card' }}"
+    value_template: "{{ trigger.to_state.attributes.event_type == 'card' }}"
 actions:
   - action: light.turn_on
     target:

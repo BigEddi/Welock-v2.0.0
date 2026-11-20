@@ -59,25 +59,25 @@
       },
       "record": {
         "name": "Letzte Öffnung",
-        "state": {
-          "fingerprint": "Fingerabdruck",
-          "passcode": "PIN-Code",
-          "card": "Karte",
-          "bt_remote": "Bluetooth-Fernbedienung",
-          "remote_433": "433-MHz-Fernbedienung",
-          "app": "App",
-          "temporary_passcode": "Temporärer Code",
-          "face": "Gesichtserkennung",
-          "nfc": "NFC",
-          "wifibox": "WIFIBOX / Home Assistant",
-          "vacation": "Urlaubsmodus",
-          "local": "Manuell (innen)",
-          "relay": "Relais",
-          "other": "Sonstiges"
-        },
         "state_attributes": {
           "method": {
-            "name": "Methode"
+            "name": "Methode",
+            "state": {
+              "fingerprint": "Fingerabdruck",
+              "passcode": "PIN-Code",
+              "card": "Karte",
+              "bt_remote": "Bluetooth-Fernbedienung",
+              "remote_433": "433-MHz-Fernbedienung",
+              "app": "App",
+              "temporary_passcode": "Temporärer Code",
+              "face": "Gesichtserkennung",
+              "nfc": "NFC",
+              "wifibox": "WIFIBOX / Home Assistant",
+              "vacation": "Urlaubsmodus",
+              "local": "Manuell (innen)",
+              "relay": "Relais",
+              "other": "Sonstiges"
+            }
           },
           "user": {
             "name": "Benutzer"
@@ -111,8 +111,20 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "unlock": "Entriegelt",
-              "relay_action": "Relais ausgelöst"
+              "fingerprint": "Fingerabdruck",
+              "passcode": "PIN-Code",
+              "card": "Karte",
+              "bt_remote": "Bluetooth-Fernbedienung",
+              "remote_433": "433-MHz-Fernbedienung",
+              "app": "App",
+              "temporary_passcode": "Temporärer Code",
+              "face": "Gesichtserkennung",
+              "nfc": "NFC",
+              "wifibox": "WIFIBOX / Home Assistant",
+              "vacation": "Urlaubsmodus",
+              "local": "Manuell (innen)",
+              "relay": "Relais",
+              "other": "Sonstiges"
             }
           },
           "method": {
@@ -129,6 +141,13 @@
           },
           "method_id": {
             "name": "Methoden-ID"
+          },
+          "event": {
+            "name": "Ereignis",
+            "state": {
+              "unlock": "Entriegelt",
+              "relay_action": "Relais ausgelöst"
+            }
           }
         }
       }

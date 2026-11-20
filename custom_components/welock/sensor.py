@@ -26,35 +26,43 @@ from homeassistant.util import dt as dt_util
 
 from .api import DeviceType, WeLockActivity, WeLockDevice
 from .const import (
-    EVENT_RELAY,
     EVENT_UNLOCK,
     KEY_BATTERY,
     KEY_LAST_ACTIVITY,
     KEY_RECORD,
-    UNLOCK_METHODS,
+    METHOD_LABELS,
 )
 from .coordinator import WeLockConfigEntry
 from .entity import WeLockEntity, async_setup_device_entities
 
 PARALLEL_UPDATES = 0
 
-METHOD_OPTIONS = sorted({*UNLOCK_METHODS.values(), "relay", "other"})
 
+def describe_activity(act: WeLockActivity, language: str) -> str:
+    """Readable text like the original integration: how, who and when.
 
-def _record_value(device: WeLockDevice) -> str | None:
-    act = device.last_activity
-    if act is None:
-        return None
-    if act.kind == EVENT_RELAY and act.method in (None, "other"):
-        return "relay"
-    return act.method or "other"
+    e.g. "Karte · Benutzer 7 · 20.11.2026 08:18:33"
+    """
+    de = language.lower().startswith("de")
+    labels = METHOD_LABELS["de" if de else "en"]
+    parts = [labels.get(act.method_slug, act.method_slug)]
+    who = act.who
+    if who and not (act.method_slug == "wifibox" and who.startswith("WL_")):
+        if act.user_name:
+            parts.append(who)
+        else:
+            parts.append(f"{'Benutzer' if de else 'User'} {who}")
+    if act.time:
+        local = dt_util.as_local(act.time)
+        parts.append(local.strftime("%d.%m.%Y %H:%M:%S" if de else "%Y-%m-%d %H:%M:%S"))
+    return " · ".join(parts)
 
 
 def _record_attrs(device: WeLockDevice) -> dict[str, Any] | None:
     act = device.last_activity
     if act is None:
         return None
-    return {**act.as_dict(), "event": act.kind}
+    return {**act.as_dict(), "method": act.method_slug, "event": act.kind}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -80,9 +88,8 @@ SENSORS: tuple[WeLockSensorDescription, ...] = (
     WeLockSensorDescription(
         key=KEY_RECORD,
         translation_key="record",
-        device_class=SensorDeviceClass.ENUM,
-        options=METHOD_OPTIONS,
-        value_fn=_record_value,
+        icon="mdi:history",
+        value_fn=lambda d: None,  # set by WeLockRecordSensor (needs language)
         attrs_fn=_record_attrs,
         device_types=(DeviceType.LOCK, DeviceType.WIFIBOX3),
     ),
@@ -136,7 +143,14 @@ class WeLockSensor(WeLockEntity, SensorEntity):
 
 
 class WeLockRecordSensor(WeLockSensor, RestoreEntity):
-    """Last activity; restored after restart so it isn't 'unknown'."""
+    """Last activity as readable text; restored after restart."""
+
+    @property
+    def native_value(self) -> str | None:
+        """Return e.g. 'Karte · Benutzer 7 · 20.11.2026 08:18:33'."""
+        if (act := self.device.last_activity) is None:
+            return None
+        return describe_activity(act, self.hass.config.language)
 
     async def async_added_to_hass(self) -> None:
         """Restore the last activity."""
@@ -152,7 +166,12 @@ class WeLockRecordSensor(WeLockSensor, RestoreEntity):
         time: datetime | None = (
             dt_util.parse_datetime(attrs["time"]) if attrs.get("time") else None
         )
-        method = last.state if last.state != "relay" else None
+        # v2.0.0-2.0.2 stored the method slug as state
+        method = attrs.get("method") or (
+            last.state if last.state in METHOD_LABELS["en"] else None
+        )
+        if method == "relay":
+            method = None
         self.device.last_activity = WeLockActivity(
             kind=attrs.get("event", EVENT_UNLOCK),
             method=method,

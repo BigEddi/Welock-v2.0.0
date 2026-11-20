@@ -94,9 +94,10 @@ async def test_record_restored(
         [
             State(
                 "sensor.wohnungstur_letzte_offnung",
-                "card",
+                "Karte · Benutzer 10 · 09.11.2026 08:37:51",
                 {
                     "event": "unlock",
+                    "method": "card",
                     "method_id": 3,
                     "user": "Thomas",
                     "user_id": "10",
@@ -116,7 +117,9 @@ async def test_record_restored(
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.wohnungstur_letzte_offnung").state == "card"
+    record = hass.states.get("sensor.wohnungstur_letzte_offnung")
+    assert record.attributes["method"] == "card"
+    assert record.state.startswith("Card · Thomas · 2026-11-0")
     ts = er.async_get(hass).async_get_entity_id(
         "sensor", DOMAIN, "welock.LOCK1_LastActivity"
     )

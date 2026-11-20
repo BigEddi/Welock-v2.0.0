@@ -59,25 +59,25 @@
       },
       "record": {
         "name": "Last unlock",
-        "state": {
-          "fingerprint": "Fingerprint",
-          "passcode": "Passcode",
-          "card": "Card",
-          "bt_remote": "Bluetooth remote",
-          "remote_433": "433 MHz remote",
-          "app": "App",
-          "temporary_passcode": "Temporary passcode",
-          "face": "Face recognition",
-          "nfc": "NFC",
-          "wifibox": "WIFIBOX / Home Assistant",
-          "vacation": "Vacation mode",
-          "local": "Manual (inside)",
-          "relay": "Relay",
-          "other": "Other"
-        },
         "state_attributes": {
           "method": {
-            "name": "Method"
+            "name": "Method",
+            "state": {
+              "fingerprint": "Fingerprint",
+              "passcode": "Passcode",
+              "card": "Card",
+              "bt_remote": "Bluetooth remote",
+              "remote_433": "433 MHz remote",
+              "app": "App",
+              "temporary_passcode": "Temporary passcode",
+              "face": "Face recognition",
+              "nfc": "NFC",
+              "wifibox": "WIFIBOX / Home Assistant",
+              "vacation": "Vacation mode",
+              "local": "Manual (inside)",
+              "relay": "Relay",
+              "other": "Other"
+            }
           },
           "user": {
             "name": "User"
@@ -111,8 +111,20 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "unlock": "Unlocked",
-              "relay_action": "Relay triggered"
+              "fingerprint": "Fingerprint",
+              "passcode": "Passcode",
+              "card": "Card",
+              "bt_remote": "Bluetooth remote",
+              "remote_433": "433 MHz remote",
+              "app": "App",
+              "temporary_passcode": "Temporary passcode",
+              "face": "Face recognition",
+              "nfc": "NFC",
+              "wifibox": "WIFIBOX / Home Assistant",
+              "vacation": "Vacation mode",
+              "local": "Manual (inside)",
+              "relay": "Relay",
+              "other": "Other"
             }
           },
           "method": {
@@ -129,6 +141,13 @@
           },
           "method_id": {
             "name": "Method ID"
+          },
+          "event": {
+            "name": "Event",
+            "state": {
+              "unlock": "Unlocked",
+              "relay_action": "Relay triggered"
+            }
           }
         }
       }

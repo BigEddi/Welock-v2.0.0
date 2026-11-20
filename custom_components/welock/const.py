@@ -51,3 +51,39 @@ UNLOCK_METHODS: Final[dict[int, str]] = {
     211: "local",
 }
 UNLOCK_TYPE_DOOR_SENSOR: Final = 31
+
+METHOD_LABELS: Final[dict[str, dict[str, str]]] = {
+    "en": {
+        "fingerprint": "Fingerprint",
+        "passcode": "Passcode",
+        "card": "Card",
+        "bt_remote": "Bluetooth remote",
+        "remote_433": "433 MHz remote",
+        "app": "App",
+        "temporary_passcode": "Temporary passcode",
+        "face": "Face recognition",
+        "nfc": "NFC",
+        "wifibox": "WIFIBOX / Home Assistant",
+        "vacation": "Vacation mode",
+        "local": "Manual (inside)",
+        "relay": "Relay",
+        "other": "Other",
+    },
+    "de": {
+        "fingerprint": "Fingerabdruck",
+        "passcode": "PIN-Code",
+        "card": "Karte",
+        "bt_remote": "Bluetooth-Fernbedienung",
+        "remote_433": "433-MHz-Fernbedienung",
+        "app": "App",
+        "temporary_passcode": "Temporärer Code",
+        "face": "Gesichtserkennung",
+        "nfc": "NFC",
+        "wifibox": "WIFIBOX / Home Assistant",
+        "vacation": "Urlaubsmodus",
+        "local": "Manuell (innen)",
+        "relay": "Relais",
+        "other": "Sonstiges",
+    },
+}
+METHOD_SLUGS: Final = tuple(METHOD_LABELS["en"])

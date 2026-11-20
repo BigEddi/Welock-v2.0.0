@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .api import DeviceType, WeLockActivity, WeLockDevice
-from .const import EVENT_RELAY, EVENT_UNLOCK, KEY_EVENT
+from .const import KEY_EVENT, METHOD_SLUGS
 from .coordinator import WeLockConfigEntry
 from .entity import WeLockEntity, async_setup_device_entities
 
@@ -16,7 +16,7 @@ PARALLEL_UPDATES = 0
 EVENT_DESCRIPTION = EventEntityDescription(
     key=KEY_EVENT,
     translation_key="activity",
-    event_types=[EVENT_UNLOCK, EVENT_RELAY],
+    event_types=list(METHOD_SLUGS),
 )
 
 
@@ -41,7 +41,11 @@ async def async_setup_entry(
 
 
 class WeLockActivityEvent(WeLockEntity, EventEntity):
-    """Event entity for unlock activity – ideal as automation trigger."""
+    """Event entity for unlock activity – ideal as automation trigger.
+
+    The event type is the unlock method (card, fingerprint, ...), so the
+    logbook shows *how* the door was opened; who/when are attributes.
+    """
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to activities."""
@@ -54,5 +58,12 @@ class WeLockActivityEvent(WeLockEntity, EventEntity):
 
     @callback
     def _on_activity(self, activity: WeLockActivity) -> None:
-        self._trigger_event(activity.kind, activity.as_dict())
+        self._trigger_event(
+            activity.method_slug,
+            {
+                **activity.as_dict(),
+                "method": activity.method_slug,
+                "event": activity.kind,
+            },
+        )
         self.async_write_ha_state()

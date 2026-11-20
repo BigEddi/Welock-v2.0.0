@@ -93,6 +93,13 @@ class WeLockActivity:
         """Best human-readable identification of the user."""
         return self.user_name or self.user_id
 
+    @property
+    def method_slug(self) -> str:
+        """Method slug, also for relay actions without method."""
+        if self.kind == EVENT_RELAY and self.method in (None, "other"):
+            return "relay"
+        return self.method or "other"
+
     def as_dict(self) -> dict[str, Any]:
         """Return attributes for entities / events."""
         return {
